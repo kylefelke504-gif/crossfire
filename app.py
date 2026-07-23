@@ -158,6 +158,7 @@ def index():
         end_time
     )
 
+    # Tổng cộng của tất cả các ví để hiển thị lên hộp trên cùng
     grand_total = total1 + total2 + total3
 
     return render_template(
