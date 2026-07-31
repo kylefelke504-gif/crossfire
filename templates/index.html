@@ -20,7 +20,7 @@
             padding: 20px;
         }
         
-        /* HỘP TỔNG VÍ TRÊN CÙNG */
+        /* HỘP TỔNG CHÍNH */
         .main-total-box {
             border: 2px solid #38bdf8;
             background: #0b1528;
@@ -48,7 +48,7 @@
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
-            margin-bottom: 25px;
+            margin-bottom: 30px;
         }
         form input {
             flex: 1;
@@ -71,23 +71,26 @@
         }
         form button:hover { background: #16a34a; }
 
-        /* TIÊU ĐỀ KHU VỰC VÍ */
+        /* THANH TIÊU ĐỀ BẢNG VÍ */
         .section-header {
-            font-size: 22px;
+            font-size: 20px;
             font-weight: 800;
-            color: #ff4d67;
+            color: #fbbf24;
             text-transform: uppercase;
-            margin-bottom: 20px;
+            margin: 30px 0 15px 0;
             display: flex;
+            justify-content: space-between;
             align-items: center;
-            gap: 8px;
+            border-bottom: 2px solid #1e293b;
+            padding-bottom: 10px;
         }
-        .section-header::before {
-            content: "";
-            display: inline-block;
-            width: 4px;
-            height: 24px;
-            background: #38bdf8;
+        .group-total-badge {
+            background: #d97706;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 16px;
+            font-weight: 800;
         }
 
         /* LƯỚI HIỂN THỊ VÍ */
@@ -156,9 +159,9 @@
 
 <div class="container">
 
-    <!-- HỘP TỔNG VÍ TRÊN CÙNG -->
+    <!-- HỘP TỔNG TẤT CẢ VÍ TRÊN CÙNG -->
     <div class="main-total-box">
-        <div class="main-total-title">💼 TỔNG VÍ</div>
+        <div class="main-total-title">💼 TỔNG TẤT CẢ VÍ</div>
         <div class="main-total-money">${{ "%.2f"|format(grand_total) }}</div>
     </div>
 
@@ -171,12 +174,13 @@
         <button type="submit">🔄 Làm mới</button>
     </form>
 
-    <!-- TIÊU ĐỀ KHU VỰC VÍ -->
-    <div class="section-header">KHU VỰC VÍ</div>
+    <!-- ================= NHÓM 1 ================= -->
+    <div class="section-header">
+        <span>🔹 NHÓM VÍ 1 (a7, a8, a9)</span>
+        <span class="group-total-badge">Tổng Nhóm 1: ${{ "%.2f"|format(group1_total) }}</span>
+    </div>
 
-    <!-- DANH SÁCH CÁC VÍ BÊN DƯỚI -->
     <div class="wallet-grid">
-        
         <!-- VÍ 1 (a7) -->
         <div class="box">
             <div class="top">
@@ -245,7 +249,16 @@
                 {% endif %}
             </div>
         </div>
+    </div>
 
+
+    <!-- ================= NHÓM 2 ================= -->
+    <div class="section-header" style="color: #38bdf8;">
+        <span>🔸 NHÓM VÍ 2 (a4, a5, a6)</span>
+        <span class="group-total-badge" style="background: #0284c7;">Tổng Nhóm 2: ${{ "%.2f"|format(group2_total) }}</span>
+    </div>
+
+    <div class="wallet-grid">
         <!-- VÍ 4 (a4) -->
         <div class="box">
             <div class="top">
@@ -314,8 +327,8 @@
                 {% endif %}
             </div>
         </div>
-
     </div>
+
 </div>
 
 <script>
