@@ -177,7 +177,7 @@
     <!-- DANH SÁCH CÁC VÍ BÊN DƯỚI -->
     <div class="wallet-grid">
         
-        <!-- VÍ 1 (Sub-user a7) -->
+        <!-- VÍ 1 (a7) -->
         <div class="box">
             <div class="top">
                 <div>
@@ -200,7 +200,7 @@
             </div>
         </div>
 
-        <!-- VÍ 2 (Sub-user a8 - Nam ôke) -->
+        <!-- VÍ 2 (a8 - Nam ôke) -->
         <div class="box">
             <div class="top">
                 <div>
@@ -223,7 +223,7 @@
             </div>
         </div>
 
-        <!-- VÍ 3 (Sub-user a9 - Grakk Mèo Thần Tài) -->
+        <!-- VÍ 3 (a9) -->
         <div class="box">
             <div class="top">
                 <div>
@@ -235,6 +235,75 @@
             <div class="detail" id="detail3">
                 {% if result3 %}
                     {% for game, d in result3.items() %}
+                    <div class="item">
+                        <div>{{ game }} (x{{ d.count }})</div>
+                        <div style="color: #ff4d67;">${{ "%.2f"|format(d.price) }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-text">Chưa có giao dịch</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- VÍ 4 (a4) -->
+        <div class="box">
+            <div class="top">
+                <div>
+                    <div class="title">Ví 4 (a4)</div>
+                    <button class="btn" onclick="toggleDetail('detail4')">📊 Chi tiết</button>
+                </div>
+                <div class="money">${{ "%.2f"|format(total4) }}</div>
+            </div>
+            <div class="detail" id="detail4">
+                {% if result4 %}
+                    {% for game, d in result4.items() %}
+                    <div class="item">
+                        <div>{{ game }} (x{{ d.count }})</div>
+                        <div style="color: #ff4d67;">${{ "%.2f"|format(d.price) }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-text">Chưa có giao dịch</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- VÍ 5 (a5) -->
+        <div class="box">
+            <div class="top">
+                <div>
+                    <div class="title">Ví 5 (a5)</div>
+                    <button class="btn" onclick="toggleDetail('detail5')">📊 Chi tiết</button>
+                </div>
+                <div class="money">${{ "%.2f"|format(total5) }}</div>
+            </div>
+            <div class="detail" id="detail5">
+                {% if result5 %}
+                    {% for game, d in result5.items() %}
+                    <div class="item">
+                        <div>{{ game }} (x{{ d.count }})</div>
+                        <div style="color: #ff4d67;">${{ "%.2f"|format(d.price) }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="empty-text">Chưa có giao dịch</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- VÍ 6 (a6) -->
+        <div class="box">
+            <div class="top">
+                <div>
+                    <div class="title">Ví 6 (a6)</div>
+                    <button class="btn" onclick="toggleDetail('detail6')">📊 Chi tiết</button>
+                </div>
+                <div class="money">${{ "%.2f"|format(total6) }}</div>
+            </div>
+            <div class="detail" id="detail6">
+                {% if result6 %}
+                    {% for game, d in result6.items() %}
                     <div class="item">
                         <div>{{ game }} (x{{ d.count }})</div>
                         <div style="color: #ff4d67;">${{ "%.2f"|format(d.price) }}</div>
