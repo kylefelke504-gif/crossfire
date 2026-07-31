@@ -3,6 +3,7 @@ import requests
 import re
 from collections import defaultdict
 from datetime import datetime, timedelta
+from concurrent.futures import ThreadPoolExecutor
 
 app = Flask(__name__)
 
@@ -65,10 +66,12 @@ def fetch_api(url, user, start_date, end_date, start_time, end_time):
             "X-Requested-With": "XMLHttpRequest"
         }
 
-        r = requests.post(url, json=payload, headers=headers, timeout=15)
-        r.raise_for_status()
+        # Tạo session riêng để tối ưu kết nối HTTP
+        with requests.Session() as session:
+            r = session.post(url, json=payload, headers=headers, timeout=8)
+            r.raise_for_status()
+            res_json = r.json()
 
-        res_json = r.json()
         data = res_json.get("data", []) if isinstance(res_json, dict) else []
 
     except Exception as e:
@@ -114,15 +117,21 @@ def index():
     start_time = request.args.get("start_time") or "00:00:00"
     end_time = request.args.get("end_time") or "23:59:59"
 
-    # Nhóm 1: Ví 1, 2, 3
-    result1, total1 = fetch_api(URL_BASE, USER1, start_date, end_date, start_time, end_time)
-    result2, total2 = fetch_api(URL_BASE, USER2, start_date, end_date, start_time, end_time)
-    result3, total3 = fetch_api(URL_BASE, USER3, start_date, end_date, start_time, end_time)
+    users = [USER1, USER2, USER3, USER4, USER5, USER6]
 
-    # Nhóm 2: Ví 4, 5, 6
-    result4, total4 = fetch_api(URL_BASE, USER4, start_date, end_date, start_time, end_time)
-    result5, total5 = fetch_api(URL_BASE, USER5, start_date, end_date, start_time, end_time)
-    result6, total6 = fetch_api(URL_BASE, USER6, start_date, end_date, start_time, end_time)
+    # ===== GỌI SONG SONG 6 VÍ CÙNG LÚC ĐỂ LOAD SIÊU NHANH =====
+    with ThreadPoolExecutor(max_workers=6) as executor:
+        futures = [
+            executor.submit(
+                fetch_api, URL_BASE, u, start_date, end_date, start_time, end_time
+            )
+            for u in users
+        ]
+        results = [f.result() for f in futures]
+
+    # Tách dữ liệu ra từng ví
+    (result1, total1), (result2, total2), (result3, total3), \
+    (result4, total4), (result5, total5), (result6, total6) = results
 
     # Tính tổng riêng từng nhóm
     group1_total = total1 + total2 + total3
