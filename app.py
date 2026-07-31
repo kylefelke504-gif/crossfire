@@ -9,27 +9,21 @@ app = Flask(__name__)
 # ===== KHAI BÁO CÁC LINK & USER =====
 URL_BASE = "https://crossfirelegend.xyz/gambler/user/child/statistic"
 
-# Cấu hình User (Đã sửa USER6)
 USER1 = "a7"
 USER2 = "a8"
 USER3 = "a9"
+
 USER4 = "a4"
 USER5 = "a5"
-USER6 = "a6"  # <--- ĐÃ SỬA: Đổi tên thành USER6
+USER6 = "a6"
 
 
 def parse_price(price_str):
-    """
-    Xử lý chuẩn xác giá tiền từ API (Ví dụ: "0,49 US$", "2,99 US$", "0,09 US$")
-    """
     if not price_str:
         return 0.0
-    
     clean_str = re.sub(r'[^0-9.,]', '', str(price_str)).strip()
-    
     if ',' in clean_str:
         clean_str = clean_str.replace(',', '.')
-        
     try:
         return float(clean_str)
     except ValueError:
@@ -120,44 +114,39 @@ def index():
     start_time = request.args.get("start_time") or "00:00:00"
     end_time = request.args.get("end_time") or "23:59:59"
 
-    # ===== GỌI API CHO 6 VÍ =====
+    # Nhóm 1: Ví 1, 2, 3
     result1, total1 = fetch_api(URL_BASE, USER1, start_date, end_date, start_time, end_time)
     result2, total2 = fetch_api(URL_BASE, USER2, start_date, end_date, start_time, end_time)
     result3, total3 = fetch_api(URL_BASE, USER3, start_date, end_date, start_time, end_time)
+
+    # Nhóm 2: Ví 4, 5, 6
     result4, total4 = fetch_api(URL_BASE, USER4, start_date, end_date, start_time, end_time)
     result5, total5 = fetch_api(URL_BASE, USER5, start_date, end_date, start_time, end_time)
-    result6, total6 = fetch_api(URL_BASE, USER6, start_date, end_date, start_time, end_time)  # <--- ĐÃ SỬA: USER6
+    result6, total6 = fetch_api(URL_BASE, USER6, start_date, end_date, start_time, end_time)
 
-    # Tính tổng tiền tất cả ví
-    grand_total = total1 + total2 + total3 + total4 + total5 + total6
+    # Tính tổng riêng từng nhóm
+    group1_total = total1 + total2 + total3
+    group2_total = total4 + total5 + total6
+
+    # Tổng cộng tất cả
+    grand_total = group1_total + group2_total
 
     return render_template(
         "index.html",
 
-        # Ví 1
-        result=result1,
-        total=total1,
+        # Ví 1, 2, 3
+        result=result1, total=total1,
+        result2=result2, total2=total2,
+        result3=result3, total3=total3,
 
-        # Ví 2 
-        result2=result2,
-        total2=total2,
+        # Ví 4, 5, 6
+        result4=result4, total4=total4,
+        result5=result5, total5=total5,
+        result6=result6, total6=total6,
 
-        # Ví 3
-        result3=result3,
-        total3=total3,
-
-        # Ví 4
-        result4=result4,
-        total4=total4,
-
-        # Ví 5
-        result5=result5,
-        total5=total5,
-
-        # Ví 6
-        result6=result6,
-        total6=total6,
-
+        # Các khoản tổng
+        group1_total=group1_total,
+        group2_total=group2_total,
         grand_total=grand_total,
 
         start_date=start_date,
