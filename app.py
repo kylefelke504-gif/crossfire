@@ -18,7 +18,7 @@ USER4 = "a4"
 USER5 = "a5"
 USER6 = "a6"
 
-# Tỷ giá quy đổi VND -> USD (52,000 / 1.99 ≈ 26,130.65)
+# Tỷ giá 52,000 VND / 1.99 USD = 26,130.65
 VND_TO_USD_RATE = 26130.65
 
 
@@ -26,20 +26,20 @@ def parse_price(price_str):
     if not price_str:
         return 0.0
     
-    price_str_raw = str(price_str).lower().strip()
-    
-    # KỊCH BẢN 1: Nếu là tiền Việt (Có chữ 'đ' hoặc 'vnd')
-    if 'đ' in price_str_raw or 'vnd' in price_str_raw:
-        # Lấy toàn bộ chữ số
-        clean_str = re.sub(r'[^0-9]', '', price_str_raw)
-        try:
-            vnd_amount = float(clean_str)
-            # Đổi sang USD và làm tròn 2 chữ số thập phân
-            return round(vnd_amount / VND_TO_USD_RATE, 2)
-        except ValueError:
-            return 0.0
+    price_str_raw = str(price_str).strip()
 
-    # KỊCH BẢN 2: Nếu là tiền USD (2,99 US$, $0.10, 0,49 US$...)
+    # 1. KIỂM TRẢ TIỀN VIỆT (Chứa chữ 'đ', '₫', 'vnd' HOẶC có mệnh giá >= 500)
+    is_vnd = any(k in price_str_raw.lower() for k in ['đ', '₫', 'vnd'])
+    
+    # Lấy toàn bộ số nguyên để kiểm tra mệnh giá
+    digits = re.sub(r'[^0-9]', '', price_str_raw)
+    num_val = float(digits) if digits else 0.0
+
+    if is_vnd or num_val >= 500:
+        # Nếu là tiền Việt, lấy tổng số tiền VNĐ chia cho tỷ giá ra USD
+        return round(num_val / VND_TO_USD_RATE, 2)
+
+    # 2. XỬ LÝ TIỀN USD (Dạng "2,99 US$", "$0.10", "0,49 US$")
     clean_str = re.sub(r'[^0-9.,]', '', price_str_raw).strip()
     if ',' in clean_str:
         clean_str = clean_str.replace(',', '.')
