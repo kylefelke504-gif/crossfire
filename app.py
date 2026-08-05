@@ -18,11 +18,29 @@ USER4 = "a4"
 USER5 = "a5"
 USER6 = "a6"
 
+# Tỷ giá quy đổi VND -> USD (52,000 / 1.99 ≈ 26,130.65)
+VND_TO_USD_RATE = 26130.65
+
 
 def parse_price(price_str):
     if not price_str:
         return 0.0
-    clean_str = re.sub(r'[^0-9.,]', '', str(price_str)).strip()
+    
+    price_str_raw = str(price_str).lower().strip()
+    
+    # KỊCH BẢN 1: Nếu là tiền Việt (Có chữ 'đ' hoặc 'vnd')
+    if 'đ' in price_str_raw or 'vnd' in price_str_raw:
+        # Lấy toàn bộ chữ số
+        clean_str = re.sub(r'[^0-9]', '', price_str_raw)
+        try:
+            vnd_amount = float(clean_str)
+            # Đổi sang USD và làm tròn 2 chữ số thập phân
+            return round(vnd_amount / VND_TO_USD_RATE, 2)
+        except ValueError:
+            return 0.0
+
+    # KỊCH BẢN 2: Nếu là tiền USD (2,99 US$, $0.10, 0,49 US$...)
+    clean_str = re.sub(r'[^0-9.,]', '', price_str_raw).strip()
     if ',' in clean_str:
         clean_str = clean_str.replace(',', '.')
     try:
@@ -66,7 +84,6 @@ def fetch_api(url, user, start_date, end_date, start_time, end_time):
             "X-Requested-With": "XMLHttpRequest"
         }
 
-        # Tạo session riêng để tối ưu kết nối HTTP
         with requests.Session() as session:
             r = session.post(url, json=payload, headers=headers, timeout=8)
             r.raise_for_status()
@@ -119,7 +136,6 @@ def index():
 
     users = [USER1, USER2, USER3, USER4, USER5, USER6]
 
-    # ===== GỌI SONG SONG 6 VÍ CÙNG LÚC ĐỂ LOAD SIÊU NHANH =====
     with ThreadPoolExecutor(max_workers=6) as executor:
         futures = [
             executor.submit(
@@ -129,31 +145,24 @@ def index():
         ]
         results = [f.result() for f in futures]
 
-    # Tách dữ liệu ra từng ví
     (result1, total1), (result2, total2), (result3, total3), \
     (result4, total4), (result5, total5), (result6, total6) = results
 
-    # Tính tổng riêng từng nhóm
     group1_total = total1 + total2 + total3
     group2_total = total4 + total5 + total6
-
-    # Tổng cộng tất cả
     grand_total = group1_total + group2_total
 
     return render_template(
         "index.html",
 
-        # Ví 1, 2, 3
         result=result1, total=total1,
         result2=result2, total2=total2,
         result3=result3, total3=total3,
 
-        # Ví 4, 5, 6
         result4=result4, total4=total4,
         result5=result5, total5=total5,
         result6=result6, total6=total6,
 
-        # Các khoản tổng
         group1_total=group1_total,
         group2_total=group2_total,
         grand_total=grand_total,
