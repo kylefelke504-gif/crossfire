@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request
 import requests
 import re
+import os
+import json
 from collections import defaultdict
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
@@ -20,6 +22,10 @@ USER6 = "a6"
 
 # Tỷ giá 52,000 VND / 1.99 USD = 26,130.65
 VND_TO_USD_RATE = 26130.65
+
+# Tạo thư mục data để lưu trữ file dữ liệu dự phòng
+DATA_DIR = "data"
+os.makedirs(DATA_DIR, exist_ok=True)
 
 
 def parse_price(price_str):
@@ -49,7 +55,33 @@ def parse_price(price_str):
         return 0.0
 
 
+def save_backup_data(user, start_date, end_date, data):
+    """Hàm tự động lưu dữ liệu JSON vào folder data/"""
+    try:
+        filename = f"{user}_{start_date}_to_{end_date}.json"
+        filepath = os.path.join(DATA_DIR, filename)
+        with open(filepath, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=2)
+    except Exception as e:
+        print(f"Lỗi khi lưu backup [{user}]:", e)
+
+
+def load_backup_data(user, start_date, end_date):
+    """Hàm tự động đọc lại dữ liệu từ folder data/ khi API gốc gặp sự cố"""
+    try:
+        filename = f"{user}_{start_date}_to_{end_date}.json"
+        filepath = os.path.join(DATA_DIR, filename)
+        if os.path.exists(filepath):
+            with open(filepath, "r", encoding="utf-8") as f:
+                print(f"⚠️ [DỰ PHÒNG] Đọc dữ liệu đã lưu cho [{user}]")
+                return json.load(f)
+    except Exception as e:
+        print(f"Lỗi khi đọc backup [{user}]:", e)
+    return []
+
+
 def fetch_api(url, user, start_date, end_date, start_time, end_time):
+    data = []
     try:
         start_local = datetime.strptime(
             f"{start_date} {start_time}",
@@ -91,9 +123,19 @@ def fetch_api(url, user, start_date, end_date, start_time, end_time):
 
         data = res_json.get("data", []) if isinstance(res_json, dict) else []
 
+        if data:
+            # Lưu lại dữ liệu mới lấy được vào máy
+            save_backup_data(user, start_date, end_date, data)
+        else:
+            # Nếu API trả về rỗng (có thể do link bị mất $), load lại dữ liệu backup cũ
+            backup = load_backup_data(user, start_date, end_date)
+            if backup:
+                data = backup
+
     except Exception as e:
         print(f"API ERROR [{user}]:", e)
-        data = []
+        # Nếu bị lỗi mạng / sập API gốc, tự load từ file dự phòng ra
+        data = load_backup_data(user, start_date, end_date)
 
     result = defaultdict(lambda: {"price": 0.0, "count": 0})
     total = 0.0
