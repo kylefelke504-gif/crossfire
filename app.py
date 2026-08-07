@@ -33,24 +33,39 @@ def parse_price(price_str):
         return 0.0
     
     price_str_raw = str(price_str).strip()
+    price_lower = price_str_raw.lower()
 
-    # 1. KIỂM TRẢ TIỀN VIỆT (Chứa chữ 'đ', '₫', 'vnd' HOẶC có mệnh giá >= 500)
-    is_vnd = any(k in price_str_raw.lower() for k in ['đ', '₫', 'vnd'])
-    
-    # Lấy toàn bộ số nguyên để kiểm tra mệnh giá
-    digits = re.sub(r'[^0-9]', '', price_str_raw)
-    num_val = float(digits) if digits else 0.0
+    # 1. Kiểm tra ký hiệu tiền tệ rõ ràng
+    is_vnd = any(k in price_lower for k in ['đ', '₫', 'vnd', 'vnđ'])
+    is_usd = any(k in price_lower for k in ['$', 'us$', 'usd'])
 
-    if is_vnd or num_val >= 500:
-        # Nếu là tiền Việt, lấy tổng số tiền VNĐ chia cho tỷ giá ra USD
+    # 2. XỬ LÝ TIỀN USD CHẮC CHẮN (VD: "$9.99", "1,99 US$", "$0.09")
+    if is_usd:
+        clean_str = re.sub(r'[^0-9.,]', '', price_str_raw).strip()
+        if ',' in clean_str:
+            clean_str = clean_str.replace(',', '.')
+        try:
+            return float(clean_str)
+        except ValueError:
+            return 0.0
+
+    # 3. XỬ LÝ TIỀN VNĐ CHẮC CHẮN (VD: "50.000đ", "100,000 VNĐ")
+    if is_vnd:
+        digits = re.sub(r'[^0-9]', '', price_str_raw)
+        num_val = float(digits) if digits else 0.0
         return round(num_val / VND_TO_USD_RATE, 2)
 
-    # 2. XỬ LÝ TIỀN USD (Dạng "2,99 US$", "$0.10", "0,49 US$")
+    # 4. TRƯỜNG HỢP KHÔNG CÓ KÝ HIỆU (VD: "9.99", "2,99", "50000")
     clean_str = re.sub(r'[^0-9.,]', '', price_str_raw).strip()
-    if ',' in clean_str:
+    if ',' in clean_str and '.' not in clean_str:
         clean_str = clean_str.replace(',', '.')
+
     try:
-        return float(clean_str)
+        val = float(clean_str)
+        # Nếu số tiền gốc >= 500 thì mới coi là VNĐ, còn lại là USD
+        if val >= 500:
+            return round(val / VND_TO_USD_RATE, 2)
+        return val
     except ValueError:
         return 0.0
 
@@ -124,17 +139,14 @@ def fetch_api(url, user, start_date, end_date, start_time, end_time):
         data = res_json.get("data", []) if isinstance(res_json, dict) else []
 
         if data:
-            # Lưu lại dữ liệu mới lấy được vào máy
             save_backup_data(user, start_date, end_date, data)
         else:
-            # Nếu API trả về rỗng (có thể do link bị mất $), load lại dữ liệu backup cũ
             backup = load_backup_data(user, start_date, end_date)
             if backup:
                 data = backup
 
     except Exception as e:
         print(f"API ERROR [{user}]:", e)
-        # Nếu bị lỗi mạng / sập API gốc, tự load từ file dự phòng ra
         data = load_backup_data(user, start_date, end_date)
 
     result = defaultdict(lambda: {"price": 0.0, "count": 0})
